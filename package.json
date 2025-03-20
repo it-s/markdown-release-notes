@@ -1,14 +1,18 @@
 {
   "name": "generatemarkdownreleasenotes",
   "version": "1.0.0",
-  "description": "",
+  "description": "Generate release notes MARKDOWN file by diffing the contents of two branches",
   "main": "generateMarkdownReleaseNotes.js",
+  "bin": {
+    "generatemarkdownreleasenotes": "./generateMarkdownReleaseNotes.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "commander": "^13.1.0",
     "semver": "^7.5.4"
   }
 }

@@ -1,12 +1,14 @@
+#! /usr/bin/env node
 const { execSync } = require("child_process");
 const path = require('path');
 const semver = require("semver");
+const { program } = require('commander');
 
 const execGitCommand = (command, directory) => {
   try {
     return execSync(command, { cwd: directory }).toString().trim();
   } catch (error) {
-    console.error(`Git command failed: ${command}`, error);
+    console.error(`Git command failed: ${command}`);
     process.exit(1);
   }
 };
@@ -50,18 +52,28 @@ const formatAsMarkdown = (commitsByVersion) => {
 };
 
 const generateMarkdownReleaseNotes = (A, B, directory) => {
-  console.log("Working in", directory);
-  console.log("Generating log notes for:", A, "<-->", B);
+  console.log("# Release notes for:", A, "<-->", B);
   const commits = getCommits(A, B, directory);
   const commitsByVersion = groupCommitsByVersion(commits);
   return formatAsMarkdown(commitsByVersion);
 };
 
-const directory = process.argv[2];
-const branchA = process.argv[3];
-const branchB = process.argv[4];
 const ERROR_MSG =
-  "Missing command line arguments: node generateMarkdownReleaseNotes.js [git project dir] [branch name from] [branch name to]";
+  "Missing command line arguments: generateMarkdownReleaseNotes [branch name from] [branch name to]";
+
+program
+  .name('generatemarkdownreleasenotes')
+  .description('Generate release notes MARKDOWN file by diffing the history of two branches')
+  .version('1.0.0')
+  .argument("<branchA>", "branch name from")
+  .argument("<branchB>", "branch name to")
+  .showHelpAfterError(ERROR_MSG);
+
+program.parse();
+
+const directory = process.cwd();
+const branchA = program.args[0];
+const branchB = program.args[1];
 console.assert(Boolean(directory) && Boolean(branchA) && Boolean(branchB), ERROR_MSG);
-if (directory && branchA && branchB)
+if (branchA && branchB)
   console.log(generateMarkdownReleaseNotes(branchA, branchB, path.resolve(directory)));
