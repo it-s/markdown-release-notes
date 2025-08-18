@@ -1,6 +1,6 @@
 {
   "name": "generatemarkdownreleasenotes",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Generate release notes MARKDOWN file by diffing the contents of two branches",
   "main": "generateMarkdownReleaseNotes.js",
   "bin": {

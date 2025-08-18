@@ -15,8 +15,13 @@ const execGitCommand = (command, directory) => {
 
 const parseCommitData = (commitData) => {
   const [hash, ...message] = commitData.split(" ");
-  const packageJson = execGitCommand(`git show ${hash}:package.json`);
-  const { version } = JSON.parse(packageJson);
+  let version = "NA";
+  try {
+    const packageJson = execGitCommand(`git show ${hash}:package.json`);
+    version = JSON.parse(packageJson)?.version;
+  } catch (e) {
+    // There is no package.json
+  }
   return { version, message: message.join(" ") };
 };
 
