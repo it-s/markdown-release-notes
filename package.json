@@ -1,6 +1,6 @@
 {
   "name": "generatemarkdownreleasenotes",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Generate release notes MARKDOWN file by diffing the contents of two branches",
   "main": "generateMarkdownReleaseNotes.js",
   "bin": {
@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "commander": "^13.1.0",
+    "js-yaml": "^4.1.0",
     "semver": "^7.5.4"
   }
 }

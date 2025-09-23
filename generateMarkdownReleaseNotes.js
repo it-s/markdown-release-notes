@@ -1,8 +1,60 @@
 #! /usr/bin/env node
 const { execSync } = require("child_process");
 const path = require('path');
+const fs = require('fs');
 const semver = require("semver");
 const { program } = require('commander');
+const yaml = require('js-yaml'); // ← Add js-yaml for parsing pubspec.yaml
+
+/**
+ * Reads and parses a JSON file.
+ * @param {string} filePath
+ * @returns {object|null}
+ */
+function readJSON(filePath) {
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(content);
+  } catch (_) {
+    return null;
+  }
+}
+
+/**
+ * Reads and parses a YAML file.
+ * @param {string} filePath
+ * @returns {object|null}
+ */
+function readYAML(filePath) {
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    return yaml.load(content);
+  } catch (_) {
+    return null;
+  }
+}
+
+/**
+ * Attempts to discover the project metadata (name & version).
+ * First checks for package.json, then pubspec.yaml.
+ * @returns {{name: string, version: string}|null}
+ */
+function discoverProjectMetadata() {
+  // 1️⃣ Node.js project
+  const packageJson = readJSON(path.resolve('package.json'));
+  if (packageJson && packageJson.name && packageJson.version) {
+    return { name: packageJson.name, version: packageJson.version };
+  }
+
+  // 2️⃣ Flutter project
+  const pubspec = readYAML(path.resolve('pubspec.yaml'));
+  if (pubspec && pubspec.name && pubspec.version) {
+    return { name: pubspec.name, version: pubspec.version };
+  }
+
+  // No recognizable metadata found
+  return null;
+}
 
 const execGitCommand = (command, directory) => {
   try {
@@ -17,10 +69,10 @@ const parseCommitData = (commitData) => {
   const [hash, ...message] = commitData.split(" ");
   let version = "NA";
   try {
-    const packageJson = execGitCommand(`git show ${hash}:package.json`);
-    version = JSON.parse(packageJson)?.version;
+    const projectMetadata = discoverProjectMetadata();
+    version = projectMetadata ? projectMetadata.version : "NA";
   } catch (e) {
-    // There is no package.json
+    console.error("There is no package.json or pubspec.yaml");
   }
   return { version, message: message.join(" ") };
 };
@@ -66,10 +118,14 @@ const generateMarkdownReleaseNotes = (A, B, directory) => {
 const ERROR_MSG =
   "Missing command line arguments: generateMarkdownReleaseNotes [branch name from] [branch name to]";
 
+// Read version from package.json
+const packageJson = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), 'utf8'));
+const packageVersion = packageJson.version;
+
 program
   .name('generatemarkdownreleasenotes')
   .description('Generate release notes MARKDOWN file by diffing the history of two branches')
-  .version('1.0.0')
+  .version(packageVersion)
   .argument("<branchA>", "branch name from")
   .argument("<branchB>", "branch name to")
   .showHelpAfterError(ERROR_MSG);
