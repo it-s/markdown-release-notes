@@ -1,4 +1,4 @@
-#! /usr/bin/env node
+#!/usr/bin/env node
 const { execSync } = require("child_process");
 const path = require('path');
 const fs = require('fs');
@@ -128,9 +128,9 @@ const parseCommitData = (commitData) => {
   };
 };
 
-const getCommits = (fromBranch, toBranch, directory) => {
+const getCommits = (from, to, directory) => {
   const log = execGitCommand(
-    `git log ${fromBranch}..${toBranch} --no-merges --pretty=format:"%H %s"`,
+    `git log ${from}..${to} --no-merges --pretty=format:"%H %s"`,
     directory
   );
   return log.split("\n").map(parseCommitData);
@@ -165,15 +165,15 @@ const formatAsMarkdown = (commitsByVersion) => {
     .join("\n\n");
 };
 
-const generateMarkdownReleaseNotes = (A, B, directory) => {
-  console.log("# Release notes for:", A, "<-->", B);
-  const commits = getCommits(A, B, directory);
+const generateMarkdownReleaseNotes = (from, to, directory) => {
+  console.log("# Release notes for:", from, "<-->", to);
+  const commits = getCommits(from, to, directory);
   const commitsByVersion = groupCommitsByVersion(commits);
   return formatAsMarkdown(commitsByVersion);
 };
 
 const ERROR_MSG =
-  "Missing command line arguments: generateMarkdownReleaseNotes [branch name from] [branch name to]";
+  "Missing command line arguments: generateMarkdownReleaseNotes [from] [to]";
 
 // Read version from package.json
 const packageJson = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), 'utf8'));
@@ -181,17 +181,17 @@ const packageVersion = packageJson.version;
 
 program
   .name('generatemarkdownreleasenotes')
-  .description('Generate release notes MARKDOWN file by diffing the history of two branches')
+  .description('Generate release notes MARKDOWN file by diffing the history of two branches or commits')
   .version(packageVersion)
-  .argument("<branchA>", "branch name from")
-  .argument("<branchB>", "branch name to")
+  .argument("<from>", "branch name or commit hash from")
+  .argument("<to>", "branch name or commit hash to")
   .showHelpAfterError(ERROR_MSG);
 
 program.parse();
 
 const directory = process.cwd();
-const branchA = program.args[0];
-const branchB = program.args[1];
-console.assert(Boolean(directory) && Boolean(branchA) && Boolean(branchB), ERROR_MSG);
-if (branchA && branchB)
-  console.log(generateMarkdownReleaseNotes(branchA, branchB, path.resolve(directory)));
+const from = program.args[0];
+const to = program.args[1];
+console.assert(Boolean(directory) && Boolean(from) && Boolean(to), ERROR_MSG);
+if (from && to)
+  console.log(generateMarkdownReleaseNotes(from, to, path.resolve(directory)));
